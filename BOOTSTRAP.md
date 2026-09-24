@@ -1,5 +1,11 @@
 # Recreating Balack on another machine
 
+> **If the target machine cannot clone this repo, use [REBUILD-PROMPT.md](REBUILD-PROMPT.md)
+> instead.** That prompt is self-contained — it carries `mac.sh` and Balack's system
+> prompt in full, so the machine builds its own copy in its own repo and needs no
+> access to this one. The route below is only the shortcut for machines that *can*
+> clone, where copying is quicker than rebuilding.
+
 Paste the block below into a fresh Claude Code session on the target machine. It
 works under any Claude account — Balack needs no API key and no Anthropic
 credential of his own.
