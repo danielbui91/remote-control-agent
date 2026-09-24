@@ -45,6 +45,10 @@ do anything destructive or type a credential.
 Keep him in sync with this file — he has the display geometry and the gotchas
 baked in, so if `mac.sh` gains a command or your monitors change, update both.
 
+To set him up on another machine, see [BOOTSTRAP.md](BOOTSTRAP.md). The canonical
+system prompt lives at [agents/balack.template.md](agents/balack.template.md);
+four values in it are per-machine and get filled in during setup.
+
 ---
 
 # Part 1 — Reach the machine from your phone
