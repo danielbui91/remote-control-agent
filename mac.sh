@@ -30,7 +30,8 @@ usage: mac.sh <command> [args]
   click <app> <name>      click the control named <name>
   menu <app> <path>       click a menu item, e.g. "File>Save As…"
   type <text>             type into whatever has focus
-  key <combo>             send a combo, e.g. cmd+s, ctrl+shift+tab, return
+  key <combo>             send a combo, e.g. cmd+s, ctrl+shift+tab, cmd+minus, f5
+                          (unknown key names are refused, never typed out)
   shot [path] [display]   screenshot a display (default: /tmp/shot.png, display 1)
   shot-app <app> [path]   screenshot just that app's front window
   displays                displays, their origins and Retina scale
@@ -292,19 +293,39 @@ send_key() {
         local joined; IFS=', '; joined="${mods[*]}"; unset IFS
         using=" using {$joined}"
     fi
-    # Named keys have no character, so they go through `key code`.
-    local code=""
+    # Named keys have no character, so they go through `key code`. Punctuation
+    # names stand for their character. Anything else longer than one character
+    # is refused: passing an unknown name to `keystroke` would type it out
+    # letter by letter with the modifiers held (cmd+minus fired cmd+m, cmd+i...).
+    local code="" char=""
     case "$(echo "$key" | tr '[:upper:]' '[:lower:]')" in
         return|enter) code=36 ;;  tab) code=48 ;;   space) code=49 ;;
-        delete|backspace) code=51 ;; escape|esc) code=53 ;;
+        delete|backspace) code=51 ;; escape|esc) code=53 ;; forwarddelete|del) code=117 ;;
         left) code=123 ;; right) code=124 ;; down) code=125 ;; up) code=126 ;;
         home) code=115 ;; end) code=119 ;; pageup) code=116 ;; pagedown) code=121 ;;
+        f1) code=122 ;; f2) code=120 ;; f3) code=99 ;;  f4) code=118 ;;
+        f5) code=96 ;;  f6) code=97 ;;  f7) code=98 ;;  f8) code=100 ;;
+        f9) code=101 ;; f10) code=109 ;; f11) code=103 ;; f12) code=111 ;;
+        minus|dash) char='-' ;; plus) char='+' ;; equal|equals) char='=' ;;
+        comma) char=',' ;; period|dot) char='.' ;; slash) char='/' ;;
+        backslash) char='\' ;; semicolon) char=';' ;; quote) char="'" ;;
+        backtick|grave) char='`' ;; leftbracket) char='[' ;; rightbracket) char=']' ;;
     esac
     if [ -n "$code" ]; then
         osa "tell application \"System Events\" to key code $code$using"
-    else
-        osa "tell application \"System Events\" to keystroke \"$key\"$using"
+        return
     fi
+    if [ -z "$char" ]; then
+        if [ "${#key}" -ne 1 ]; then
+            echo "key: unknown key name '${key}' in '${combo}', nothing sent." >&2
+            echo "Use one character or a name: return tab space delete esc forwarddelete arrows home end pageup pagedown f1-f12 minus plus equal comma period slash backslash semicolon quote backtick leftbracket rightbracket" >&2
+            return 1
+        fi
+        char="$key"
+    fi
+    # Escape for an AppleScript string literal.
+    [ "$char" = '\' ] || [ "$char" = '"' ] && char="\\$char"
+    osa "tell application \"System Events\" to keystroke \"$char\"$using"
 }
 
 cmd="${1:-}"; shift || true
